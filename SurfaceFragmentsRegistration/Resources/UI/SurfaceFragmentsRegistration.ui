@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SurfaceFragmentsRegistration</class>
+ <widget class="qMRMLWidget" name="SurfaceFragmentsRegistration">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1189</width>
+    <height>682</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton" native="true">
+     <property name="text" stdset="0">
+      <string>Inputs</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Source Model: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="qMRMLNodeComboBox" name="sourceModelSelector" native="true">
+        <property name="toolTip">
+         <string>Pick the source model to the algorithm. Surface Fragments will be calculated on this model, as well as distance scalars will be applied to this model</string>
+        </property>
+        <property name="nodeTypes" stdset="0">
+         <stringlist>
+          <string>vtkMRMLModelNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="noneEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="showHidden" stdset="0">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Target Model: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="qMRMLNodeComboBox" name="targetModelSelector" native="true">
+        <property name="toolTip">
+         <string>Pick the target model to the algorithm.</string>
+        </property>
+        <property name="nodeTypes" stdset="0">
+         <stringlist>
+          <string>vtkMRMLModelNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="noneEnabled" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="showHidden" stdset="0">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="settingsCollapsibleButton" native="true">
+     <property name="text" stdset="0">
+      <string>Settings</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Initialization Candidate Radius: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="ctkSliderWidget" name="initializationClusterRadiusSelector" native="true">
+        <property name="toolTip">
+         <string>At the start of each iteration, an optimal initialization region and initialization transformation have to be determined. To this end, a circular zone is extracted around a randomly selected central vertex on the source model with an area that can be chosen here, and is registered to the target model.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>50.000000000000000</double>
+        </property>
+        <property name="suffix" stdset="0">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Minimal Fragment Area: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="ctkSliderWidget" name="minimalClusterAreaSelector" native="true">
+        <property name="toolTip">
+         <string>First, the unmasked parts of the Source Model are separated based on their geometric connectivity. If a separate surface area is larger than this value, the algorithm starts. Furthermore, this is the termination criterion of the algorithm as it will be tested after each of the following iterations.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>50000.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>500.000000000000000</double>
+        </property>
+        <property name="suffix" stdset="0">
+         <string>mm2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Cutoff Deviation: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="ctkSliderWidget" name="cutoffThresholdSelector" native="true">
+        <property name="toolTip">
+         <string>All fragments, that are generated, will show a maximum continuous deviation of this value. A smaller value typically results in more fragments.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>2.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>1.500000000000000</double>
+        </property>
+        <property name="suffix" stdset="0">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="advancedCollapsibleButton" native="true">
+     <property name="text" stdset="0">
+      <string>Advanced</string>
+     </property>
+     <property name="collapsed" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QFormLayout" name="formLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Initialization LM-Registration: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="preRegistrationCB">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="toolTip">
+         <string>Use Landmark registration for prealignment. Fiducials as landmarks have to be placed in the same order for the source and target model accordingly.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="ctkCollapsibleGroupBox" name="landmarksCollapibleBox" native="true">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text" stdset="0">
+         <string>Select Landmarks</string>
+        </property>
+        <property name="collapsed" stdset="0">
+         <bool>true</bool>
+        </property>
+        <layout class="QFormLayout" name="formLayout_20">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Source Landmarks: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="qMRMLNodeComboBox" name="sourceLandmarkSelector" native="true">
+           <property name="toolTip">
+            <string>Pick the source landmars to the algorithm.</string>
+           </property>
+           <property name="nodeTypes" stdset="0">
+            <stringlist>
+             <string>vtkMRMLMarkupsFiducialNode</string>
+            </stringlist>
+           </property>
+           <property name="selectNodeUponCreation" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="showChildNodeTypes" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="addEnabled" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="removeEnabled" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="noneEnabled" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="showHidden" stdset="0">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Target Landmarks: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="qMRMLNodeComboBox" name="targetLandmarkSelector" native="true">
+           <property name="toolTip">
+            <string>Pick the target landmars to the algorithm.</string>
+           </property>
+           <property name="nodeTypes" stdset="0">
+            <stringlist>
+             <string>vtkMRMLMarkupsFiducialNode</string>
+            </stringlist>
+           </property>
+           <property name="selectNodeUponCreation" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="showChildNodeTypes" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="addEnabled" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="removeEnabled" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="noneEnabled" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="showHidden" stdset="0">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Initialization Iterations: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="ctkSliderWidget" name="initializationIterationsSelector" native="true">
+        <property name="toolTip">
+         <string>At the start of each iteration, an optimal initialization region and initialization transformation have to be determined. This is done iteratively (the numbers of iterations can be set here) with a random region. The registration showing the smallest overall deviation among all iterations will be chosen as an initialization registration. Too small values may result in bad initial registration, large values may lead to a longer computation time.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>3.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Opening Width: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="ctkSliderWidget" name="openingWidthSelector" native="true">
+        <property name="toolTip">
+         <string>To remove thin bridging vertex lines that remain after thresholding due to the three dimensional overlapping, an opening method similar to the morphological operator in image processing is used. The original operator works by first eroding and then dilating a mask image. This selector variates the number of vertex rowes eroded and dilated in this process. Using small values may result in bridging vertices between fragments, too large values may smooth the borders of the fragments.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>30.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>8.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Maximal Iterations: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="ctkSliderWidget" name="maximalIterationsSelector" native="true">
+        <property name="toolTip">
+         <string>For some models it might happen that the algorithm gets caught in a loop, depending on the used settings. This is a technical selector terminating the iterative loop. It is not possible for the algorithm to find more fragments as number of iterations selected here.</string>
+        </property>
+        <property name="decimals" stdset="0">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="minimum" stdset="0">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum" stdset="0">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="value" stdset="0">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Create Transformations: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QCheckBox" name="createTransformationsCB">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="toolTip">
+         <string>Create a transformation node for each fragment registration.</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Mark Deviations: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QCheckBox" name="markDeviationsCB">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="toolTip">
+         <string>Generate a scalar showing the surface deviation of each source models vertex for each registration.</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Mark Fragments: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QCheckBox" name="markFragmentsCB">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="toolTip">
+         <string>Generate a scalar showing highlighting each fragment.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="applyButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>Run the algorithm.</string>
+     </property>
+     <property name="text">
+      <string>Apply</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="outputsCollapsibleButton" native="true">
+     <property name="text" stdset="0">
+      <string>Outputs</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Select Fragment: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="fragmentSelectorSB"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkSliderWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkSliderWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleGroupBox</class>
+   <extends>QWidget</extends>
+   <header>ctkcollapsiblegroupbox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
