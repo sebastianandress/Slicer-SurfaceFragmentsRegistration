@@ -26,6 +26,9 @@
       </item>
       <item row="0" column="1">
        <widget class="qMRMLNodeComboBox" name="sourceModelSelector" native="true">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
          <string>Pick the source model to the algorithm. Surface Fragments will be calculated on this model, as well as distance scalars will be applied to this model</string>
         </property>
@@ -60,6 +63,9 @@
       </item>
       <item row="1" column="1">
        <widget class="qMRMLNodeComboBox" name="targetModelSelector" native="true">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
          <string>Pick the target model to the algorithm.</string>
         </property>
@@ -212,15 +218,12 @@
       <item row="0" column="1">
        <widget class="QCheckBox" name="preRegistrationCB">
         <property name="toolTip">
-         <string/>
-        </property>
-        <property name="toolTip">
          <string>Use Landmark registration for prealignment. Fiducials as landmarks have to be placed in the same order for the source and target model accordingly.</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="ctkCollapsibleGroupBox" name="landmarksCollapibleBox" native="true">
+       <widget class="ctkCollapsibleGroupBox" name="landmarksCollapibleBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -240,6 +243,9 @@
          </item>
          <item row="0" column="1">
           <widget class="qMRMLNodeComboBox" name="sourceLandmarkSelector" native="true">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="toolTip">
             <string>Pick the source landmars to the algorithm.</string>
            </property>
@@ -277,6 +283,9 @@
          </item>
          <item row="1" column="1">
           <widget class="qMRMLNodeComboBox" name="targetLandmarkSelector" native="true">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="toolTip">
             <string>Pick the target landmars to the algorithm.</string>
            </property>
@@ -404,11 +413,11 @@
       </item>
       <item row="5" column="1">
        <widget class="QCheckBox" name="createTransformationsCB">
-        <property name="text">
-         <string/>
-        </property>
         <property name="toolTip">
          <string>Create a transformation node for each fragment registration.</string>
+        </property>
+        <property name="text">
+         <string/>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -424,11 +433,11 @@
       </item>
       <item row="6" column="1">
        <widget class="QCheckBox" name="markDeviationsCB">
-        <property name="text">
-         <string/>
-        </property>
         <property name="toolTip">
          <string>Generate a scalar showing the surface deviation of each source models vertex for each registration.</string>
+        </property>
+        <property name="text">
+         <string/>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -444,11 +453,11 @@
       </item>
       <item row="8" column="1">
        <widget class="QCheckBox" name="markFragmentsCB">
-        <property name="text">
-         <string/>
-        </property>
         <property name="toolTip">
          <string>Generate a scalar showing highlighting each fragment.</string>
+        </property>
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -517,9 +526,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
-   <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
+   <class>ctkCollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>ctkCollapsibleGroupBox.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -539,11 +548,95 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
+   <class>ctkCollapsibleButton</class>
    <extends>QWidget</extends>
-   <header>ctkcollapsiblegroupbox.h</header>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>sourceModelSelector</tabstop>
+  <tabstop>targetModelSelector</tabstop>
+  <tabstop>initializationClusterRadiusSelector</tabstop>
+  <tabstop>minimalClusterAreaSelector</tabstop>
+  <tabstop>cutoffThresholdSelector</tabstop>
+  <tabstop>preRegistrationCB</tabstop>
+  <tabstop>sourceLandmarkSelector</tabstop>
+  <tabstop>targetLandmarkSelector</tabstop>
+  <tabstop>initializationIterationsSelector</tabstop>
+  <tabstop>openingWidthSelector</tabstop>
+  <tabstop>maximalIterationsSelector</tabstop>
+  <tabstop>createTransformationsCB</tabstop>
+  <tabstop>markDeviationsCB</tabstop>
+  <tabstop>markFragmentsCB</tabstop>
+  <tabstop>applyButton</tabstop>
+  <tabstop>fragmentSelectorSB</tabstop>
+ </tabstops>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>SurfaceFragmentsRegistration</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>sourceModelSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>340</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>642</x>
+     <y>25</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SurfaceFragmentsRegistration</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>targetModelSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>340</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>642</x>
+     <y>47</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SurfaceFragmentsRegistration</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>sourceLandmarkSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>340</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>750</x>
+     <y>204</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SurfaceFragmentsRegistration</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>targetLandmarkSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>340</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>750</x>
+     <y>226</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
