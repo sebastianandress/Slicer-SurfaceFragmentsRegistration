@@ -146,6 +146,7 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
 
     # Buttons
     self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
+    self.ui.fragmentSelectorSB.connect('valueChanged(int)', self.onFragmentSelector)
 
     # Make sure parameter node is initialized (needed for module reload)
     self.initializeParameterNode()
@@ -289,11 +290,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
 
     wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
-    # self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.inputSelector.currentNodeID)
-    # self._parameterNode.SetNodeReferenceID("OutputVolume", self.ui.outputSelector.currentNodeID)
-    # self._parameterNode.SetParameter("Threshold", str(self.ui.imageThresholdSliderWidget.value))
-    # self._parameterNode.SetParameter("Invert", "true" if self.ui.invertOutputCheckBox.checked else "false")
-    # self._parameterNode.SetNodeReferenceID("OutputVolumeInverse", self.ui.invertedOutputSelector.currentNodeID)
     self._parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, self.ui.sourceModelSelector.currentNodeID)
     self._parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, self.ui.targetModelSelector.currentNodeID)
     self._parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(self.ui.initializationClusterRadiusSelector.value))
@@ -337,6 +333,31 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     qt.QApplication.restoreOverrideCursor()
     if errorMessage:
       slicer.util.errorDisplay("Registration failed: " + errorMessage)
+    self._parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(1))
+
+  def onFragmentSelector(self, value):
+    source = self._parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL)
+    trfNodes = slicer.util.getNodesByClass("vtkMRMLLinearTransformNode")
+    trfNrs = list()
+    for trf in trfNodes:
+      if trf.GetName().startswith(PREFIX_TRANSFORMATION):
+        trfNrs.append(int(float(trf.GetName().split(PREFIX_TRANSFORMATION)[-1])))
+    
+    devNrs = list()
+    for a in range(source.GetPolyData().GetPointData().GetNumberOfArrays()):
+      if source.GetPolyData().GetPointData().GetArrayName(a).startswith(PREFIX_DEVIATION):
+        devNrs.append(int(float(source.GetPolyData().GetPointData().GetArrayName(a).split(PREFIX_DEVIATION)[-1])))
+
+    newVal = min(devNrs, key=lambda x:abs(x-value))
+
+    source.GetDisplayNode().SetScalarVisibility(True)
+    source.GetDisplayNode().SetActiveScalarName(PREFIX_DEVIATION + str(newVal))
+
+    if newVal in trfNrs:
+      source.SetAndObserveTransformNodeID(slicer.util.getNode(PREFIX_TRANSFORMATION + str(newVal)).GetID())
+    
+    self._parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(newVal))
+
 
   def addLog(self, text):
     slicer.util.showStatusMessage(text)
@@ -532,7 +553,6 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
         slicer.mrmlScene.AddNode(trfNode)
 
       if parameterNode.GetParameter(PARAMETER_MARKFRAGMENTS) == "true":
-        # self._addModel(sgPD, parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL).GetName() + "_cluster_"+str(clusters))
         ca = np.zeros(sourcePD.GetNumberOfPoints())
         np.put(ca, eia, 1)
         self._addArray(parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL).GetPolyData(), ca, PREFIX_FRAGMENT + str(clusters))
