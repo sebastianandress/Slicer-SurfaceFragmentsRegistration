@@ -908,6 +908,7 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     """
     self.setUp()
     self.test_SurfaceFragmentsRegistration1()
+    self.test_SurfaceFragmentsRegistration2()
 
   def test_SurfaceFragmentsRegistration1(self):
     """Minimal working scenario with spheres.
@@ -967,22 +968,8 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
 
     self.delayDisplay("Run algorithm")
 
-    logic = SimilaritySubgroupsLogic()
-    logic.sourceModel = smod
-    logic.targetModel = tmod
-    logic.sourceLM = sfid
-    logic.targetLM = tfid
-    logic.initializationClusterRadius = 20
-    logic.initializationIterations = 5
-    logic.minimalClusterArea = 10
-    logic.openingWidth = 1
-    logic.cutoffThreshold = 0.5
-    logic.maximalIterations = 10
-    logic.addClusters = True
-    logic.deleteScalars = False
-    logic.run()
-
     parameterNode = self.logic.getParameterNode()
+    self.logic.setDefaultParameters(parameterNode, overwrite=True)
     parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, smod.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, tmod.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_SOURCELANDMARKS, sfid.GetID())
@@ -1032,6 +1019,7 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
 
     self.delayDisplay("Run algorithm")
     parameterNode = self.logic.getParameterNode()
+    self.logic.setDefaultParameters(parameterNode, overwrite=True)
     parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, sourceModel.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, targetModel.GetID())
     parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(1.0))
