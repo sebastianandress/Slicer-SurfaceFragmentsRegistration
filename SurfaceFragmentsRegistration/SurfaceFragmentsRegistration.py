@@ -244,6 +244,7 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
       self.ui.applyButton.enabled = False
     if self._parameterNode.GetParameter(PARAMETER_PREREGISTRATION) == "true":
       self.ui.landmarksCollapibleBox.enabled = True
+      self.ui.landmarksCollapibleBox.collapsed = False
       self.ui.sourceLandmarkSelector.enabled = True
       self.ui.targetLandmarkSelector.enabled = True
     else:
