@@ -42,42 +42,18 @@ def registerSampleData():
   # but if no sample data is available then this method (and associated startupCompeted signal connection) can be removed.
 
   import SampleData
-  iconsPath = os.path.join(os.path.dirname(__file__), 'Resources/Icons')
-
   # To ensure that the source code repository remains small (can be downloaded and installed quickly)
   # it is recommended to store data sets that are larger than a few MB in a Github release.
 
-  # SurfaceFragmentsRegistration1
   SampleData.SampleDataLogic.registerCustomSampleDataSource(
-    # Category and sample name displayed in Sample Data module
-    category='SurfaceFragmentsRegistration',
-    sampleName='SurfaceFragmentsRegistration1',
-    # Thumbnail should have size of approximately 260x280 pixels and stored in Resources/Icons folder.
-    # It can be created by Screen Capture module, "Capture all views" option enabled, "Number of images" set to "Single".
-    thumbnailFileName=os.path.join(iconsPath, 'SurfaceFragmentsRegistration1.png'),
-    # Download URL and target file name
-    uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-    fileNames='SurfaceFragmentsRegistration1.nrrd',
-    # Checksum to ensure file integrity. Can be computed by this command:
-    #  import hashlib; print(hashlib.sha256(open(filename, "rb").read()).hexdigest())
-    checksums = 'SHA256:998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95',
-    # This node name will be used when the data set is loaded
-    nodeNames='SurfaceFragmentsRegistration1'
-  )
-
-  # SurfaceFragmentsRegistration2
-  SampleData.SampleDataLogic.registerCustomSampleDataSource(
-    # Category and sample name displayed in Sample Data module
-    category='SurfaceFragmentsRegistration',
-    sampleName='SurfaceFragmentsRegistration2',
-    thumbnailFileName=os.path.join(iconsPath, 'SurfaceFragmentsRegistration2.png'),
-    # Download URL and target file name
-    uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-    fileNames='SurfaceFragmentsRegistration2.nrrd',
-    checksums = 'SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97',
-    # This node name will be used when the data set is loaded
-    nodeNames='SurfaceFragmentsRegistration2'
-  )
+      sampleName='Surface Fragments Registration Models',
+      category='SurfaceFragmentsRegistration',
+      uris=['https://raw.githubusercontent.com/sebastianandress/Slicer-SurfaceFragmentsRegistration/master/SurfaceFragmentsRegistration/Testing/Assets/sourceModel.vtk', 'https://raw.githubusercontent.com/sebastianandress/Slicer-SurfaceFragmentsRegistration/master/SurfaceFragmentsRegistration/Testing/Assets/targetModel.vtk'],
+      loadFiles=[True, True],
+      fileNames=['sourceModel.vtk','targetModel.vtk'],
+      nodeNames=['sourceModel','targetModel'],
+      loadFileType=['ModelFile', 'ModelFile'],
+)
 
 #
 # SurfaceFragmentsRegistrationWidget
@@ -146,6 +122,7 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
 
     # Buttons
     self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
+    self.ui.defaultsButton.connect('clicked(bool)', self.onDefaultsButton)
     self.ui.fragmentSelectorSB.connect('valueChanged(int)', self.onFragmentSelector)
 
     # Make sure parameter node is initialized (needed for module reload)
@@ -257,7 +234,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     self.ui.createTransformationsCB.checked = (self._parameterNode.GetParameter(PARAMETER_ADDTRANSFORMATION) == "true")
     self.ui.markDeviationsCB.checked = (self._parameterNode.GetParameter(PARAMETER_MARKDEVIATION) == "true")
     self.ui.markFragmentsCB.checked = (self._parameterNode.GetParameter(PARAMETER_MARKFRAGMENTS) == "true")
-    self.ui.fragmentSelectorSB.value = float(self._parameterNode.GetParameter(PARAMETER_CURRENTFRAGMENT))
 
     # Update buttons states and tooltips
     if self._parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL) and self._parameterNode.GetNodeReference(PARAMETER_TARGETMODEL):
@@ -304,7 +280,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     self._parameterNode.SetParameter(PARAMETER_ADDTRANSFORMATION, "true" if self.ui.createTransformationsCB.checked else "false")
     self._parameterNode.SetParameter(PARAMETER_MARKDEVIATION, "true" if self.ui.markDeviationsCB.checked else "false")
     self._parameterNode.SetParameter(PARAMETER_MARKFRAGMENTS, "true" if self.ui.markFragmentsCB.checked else "false")
-    self._parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(self.ui.fragmentSelectorSB.value))
 
     self._parameterNode.EndModify(wasModified)
 
@@ -331,12 +306,20 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     slicer.util.showStatusMessage("")
     self.ui.applyButton.text = 'Apply'
     qt.QApplication.restoreOverrideCursor()
+    self.ui.fragmentSelectorSB.value = 1
+
     if errorMessage:
       slicer.util.errorDisplay("Registration failed: " + errorMessage)
-    self._parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(1))
+    
+
+  def onDefaultsButton(self):
+    self.logic.setDefaultParameters(self._parameterNode, overwrite=True)
 
   def onFragmentSelector(self, value):
     source = self._parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL)
+    if not source:
+      return
+
     trfNodes = slicer.util.getNodesByClass("vtkMRMLLinearTransformNode")
     trfNrs = list()
     for trf in trfNodes:
@@ -348,6 +331,9 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
       if source.GetPolyData().GetPointData().GetArrayName(a).startswith(PREFIX_DEVIATION):
         devNrs.append(int(float(source.GetPolyData().GetPointData().GetArrayName(a).split(PREFIX_DEVIATION)[-1])))
 
+    if len(devNrs) == 0:
+      return
+
     newVal = min(devNrs, key=lambda x:abs(x-value))
 
     source.GetDisplayNode().SetScalarVisibility(True)
@@ -356,7 +342,7 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     if newVal in trfNrs:
       source.SetAndObserveTransformNodeID(slicer.util.getNode(PREFIX_TRANSFORMATION + str(newVal)).GetID())
     
-    self._parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(newVal))
+    self.ui.fragmentSelectorSB.value = newVal
 
 
   def addLog(self, text):
@@ -386,32 +372,30 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
     self.logCallback = None
     self.cancelRequested = False
 
-  def setDefaultParameters(self, parameterNode):
+  def setDefaultParameters(self, parameterNode, overwrite=False):
     """
     Initialize parameter node with default settings.
     """
-    if not parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS):
       parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(DEFAULT_INITIALIZATIONCLUSTERRADIUS))
-    if not parameterNode.GetParameter(PARAMETER_MINIMALCLUSTERAREA):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_MINIMALCLUSTERAREA):
       parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(DEFAULT_MINIMALCLUSTERAREA))
-    if not parameterNode.GetParameter(PARAMETER_CUTOFFTHRESHOLD):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_CUTOFFTHRESHOLD):
       parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(DEFAULT_CUTOFFTHRESHOLD))
-    if not parameterNode.GetParameter(PARAMETER_PREREGISTRATION):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_PREREGISTRATION):
       parameterNode.SetParameter(PARAMETER_PREREGISTRATION, "true" if DEFAULT_PREREGISTRATION else "false")
-    if not parameterNode.GetParameter(PARAMETER_INITIALIZATIONITERATIONS):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_INITIALIZATIONITERATIONS):
       parameterNode.SetParameter(PARAMETER_INITIALIZATIONITERATIONS, str(DEFAULT_INITIALIZATIONITERATIONS))
-    if not parameterNode.GetParameter(PARAMETER_OPENINGWIDTH):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_OPENINGWIDTH):
       parameterNode.SetParameter(PARAMETER_OPENINGWIDTH, str(DEFAULT_OPENINGWIDTH))
-    if not parameterNode.GetParameter(PARAMETER_MAXIMALITERATIONS):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_MAXIMALITERATIONS):
       parameterNode.SetParameter(PARAMETER_MAXIMALITERATIONS, str(DEFAULT_MAXIMALITERATIONS))
-    if not parameterNode.GetParameter(PARAMETER_ADDTRANSFORMATION):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_ADDTRANSFORMATION):
       parameterNode.SetParameter(PARAMETER_ADDTRANSFORMATION, "true" if DEFAULT_ADDTRANSFORMATION else "false")
-    if not parameterNode.GetParameter(PARAMETER_MARKDEVIATION):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_MARKDEVIATION):
       parameterNode.SetParameter(PARAMETER_MARKDEVIATION, "true" if DEFAULT_MARKDEVIATION else "false")
-    if not parameterNode.GetParameter(PARAMETER_MARKFRAGMENTS):
+    if overwrite or not parameterNode.GetParameter(PARAMETER_MARKFRAGMENTS):
       parameterNode.SetParameter(PARAMETER_MARKFRAGMENTS, "true" if DEFAULT_MARKFRAGMENTS else "false")
-    if not parameterNode.GetParameter(PARAMETER_CURRENTFRAGMENT):
-      parameterNode.SetParameter(PARAMETER_CURRENTFRAGMENT, str(DEFAULT_CURRENTFRAGMENT))
 
 
   def process(self, parameterNode):
@@ -917,6 +901,7 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
     slicer.mrmlScene.Clear()
+    self.logic = SurfaceFragmentsRegistrationLogic()
 
   def runTest(self):
     """Run as few or as many tests as needed here.
@@ -925,48 +910,146 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     self.test_SurfaceFragmentsRegistration1()
 
   def test_SurfaceFragmentsRegistration1(self):
-    """ Ideally you should have several levels of tests.  At the lowest level
-    tests should exercise the functionality of the logic with different inputs
-    (both valid and invalid).  At higher levels your tests should emulate the
-    way the user would interact with your code and confirm that it still works
-    the way you intended.
-    One of the most important features of the tests is that it should alert other
-    developers when their changes will have an impact on the behavior of your
-    module.  For example, if a developer removes a feature that you depend on,
-    your test should break so they know that the feature is needed.
+    """Minimal working scenario with spheres.
+    """
+
+    self.delayDisplay("Starting the test")
+    #
+    # first, get some data
+    #
+    self.delayDisplay("Starting test_SimilaritySubgroups1")
+
+    # from SegmentStatistics import SegmentStatisticsLogic
+
+    self.delayDisplay("Create models and fiducials")
+
+    sphere1 = vtk.vtkSphereSource()
+    sphere1.SetRadius(30)
+    sphere1.SetCenter(0,0,0)
+    sphere1.SetPhiResolution(50)
+    sphere1.SetThetaResolution(50)
+    sphere1.Update()
+
+    sphere2 = vtk.vtkSphereSource()
+    sphere2.SetRadius(30)
+    sphere2.SetCenter(10,0,0)
+    sphere2.SetPhiResolution(50)
+    sphere2.SetThetaResolution(50)
+    sphere2.Update()
+
+    sphere3 = vtk.vtkSphereSource()
+    sphere3.SetRadius(30)
+    sphere3.SetCenter(50,50,50)
+    sphere3.SetPhiResolution(50)
+    sphere3.SetThetaResolution(50)
+    sphere3.Update()
+
+    boolean = vtk.vtkBooleanOperationPolyDataFilter()
+    boolean.SetOperationToUnion()
+    boolean.SetInputData(0, sphere1.GetOutput())
+    boolean.SetInputData(1, sphere2.GetOutput())
+    boolean.Update()
+
+    smod = slicer.modules.models.logic().AddModel(boolean.GetOutput())
+    tmod = slicer.modules.models.logic().AddModel(sphere3.GetOutput())
+
+    sfid = slicer.vtkMRMLMarkupsFiducialNode()
+    slicer.mrmlScene.AddNode(sfid)
+    sfid.AddFiducial(0,30,0)
+    sfid.AddFiducial(0,-30,0)
+    sfid.AddFiducial(-30,0,0)
+
+    tfid = slicer.vtkMRMLMarkupsFiducialNode()
+    slicer.mrmlScene.AddNode(tfid)
+    tfid.AddFiducial(50,80,50)
+    tfid.AddFiducial(50,20,50)
+    tfid.AddFiducial(20,50,50)
+
+    self.delayDisplay("Run algorithm")
+
+    logic = SimilaritySubgroupsLogic()
+    logic.sourceModel = smod
+    logic.targetModel = tmod
+    logic.sourceLM = sfid
+    logic.targetLM = tfid
+    logic.initializationClusterRadius = 20
+    logic.initializationIterations = 5
+    logic.minimalClusterArea = 10
+    logic.openingWidth = 1
+    logic.cutoffThreshold = 0.5
+    logic.maximalIterations = 10
+    logic.addClusters = True
+    logic.deleteScalars = False
+    logic.run()
+
+    parameterNode = self.logic.getParameterNode()
+    parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, smod.GetID())
+    parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, tmod.GetID())
+    parameterNode.SetNodeReferenceID(PARAMETER_SOURCELANDMARKS, sfid.GetID())
+    parameterNode.SetNodeReferenceID(PARAMETER_TARGETLANDMARKS, tfid.GetID())
+    parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(20))
+    parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(10))
+    parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(0.5))
+    parameterNode.SetParameter(PARAMETER_PREREGISTRATION, "true")
+    parameterNode.SetParameter(PARAMETER_INITIALIZATIONITERATIONS, str(5))
+    parameterNode.SetParameter(PARAMETER_OPENINGWIDTH, str(1))
+    parameterNode.SetParameter(PARAMETER_MAXIMALITERATIONS, str(10))
+    parameterNode.SetParameter(PARAMETER_ADDTRANSFORMATION, "true")
+    parameterNode.SetParameter(PARAMETER_MARKDEVIATION, "true")
+    parameterNode.SetParameter(PARAMETER_MARKFRAGMENTS, "true")
+
+    self.logic.process(parameterNode)
+
+    self.delayDisplay("Evaluate Result")
+
+    arrays = list()
+    for a in range(smod.GetPolyData().GetPointData().GetNumberOfArrays()):
+      ar = smod.GetPolyData().GetPointData().GetArray(a)
+      if ar.GetName().startswith(PREFIX_DEVIATION):
+        arrays.append(vtk.util.numpy_support.vtk_to_numpy(ar))
+    
+    clusterDev = np.min(arrays, axis=0)
+
+    meanMinDev = np.mean(clusterDev)
+    self.assertLessEqual(meanMinDev, 0.5)
+
+    self.delayDisplay('Test passed')
+
+  def test_SurfaceFragmentsRegistration2(self):
+    """Real world scenario with segmented hemipelvis.
     """
 
     self.delayDisplay("Starting the test")
 
     # Get/create input data
 
+    self.delayDisplay('Load Test Data Set')
     import SampleData
     registerSampleData()
-    inputVolume = SampleData.downloadSample('SurfaceFragmentsRegistration1')
-    self.delayDisplay('Loaded test data set')
+    SampleData.downloadSamples('CTAAbdomenPanoramix')
+    nodes = SampleData.downloadSamples('Surface Fragments Registration Models')
+    sourceModel, targetModel = nodes
 
-    inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(inputScalarRange[0], 0)
-    self.assertEqual(inputScalarRange[1], 695)
+    self.delayDisplay("Run algorithm")
+    parameterNode = self.logic.getParameterNode()
+    parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, sourceModel.GetID())
+    parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, targetModel.GetID())
+    parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(1.0))
 
-    outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-    threshold = 100
+    self.logic.process(parameterNode)
 
-    # Test the module logic
+    self.delayDisplay("Evaluate Result")
 
-    logic = SurfaceFragmentsRegistrationLogic()
+    arrays = list()
+    for a in range(sourceModel.GetPolyData().GetPointData().GetNumberOfArrays()):
+      ar = sourceModel.GetPolyData().GetPointData().GetArray(a)
+      if ar.GetName().startswith(PREFIX_DEVIATION):
+        arrays.append(vtk.util.numpy_support.vtk_to_numpy(ar))
+    
+    clusterDev = np.min(arrays, axis=0)
 
-    # Test algorithm with non-inverted threshold
-    logic.process(inputVolume, outputVolume, threshold, True)
-    outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], threshold)
-
-    # Test algorithm with inverted threshold
-    logic.process(inputVolume, outputVolume, threshold, False)
-    outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], inputScalarRange[1])
+    meanMinDev = np.mean(clusterDev)
+    self.assertLessEqual(meanMinDev, 0.5)
 
     self.delayDisplay('Test passed')
 
@@ -981,7 +1064,6 @@ DEFAULT_PREREGISTRATION = False
 DEFAULT_MARKDEVIATION = True
 DEFAULT_ADDTRANSFORMATION = True
 DEFAULT_MARKFRAGMENTS = False
-DEFAULT_CURRENTFRAGMENT = 0
 
 PARAMETER_SOURCEMODEL = "SourceModel"
 PARAMETER_TARGETMODEL = "TargetModel"
@@ -997,7 +1079,6 @@ PARAMETER_PREREGISTRATION = "Preregistration"
 PARAMETER_MARKDEVIATION = "MarkDeviation"
 PARAMETER_ADDTRANSFORMATION = "AddTransformation"
 PARAMETER_MARKFRAGMENTS = "MarkFragments"
-PARAMETER_CURRENTFRAGMENT = "CurrentFragment"
 
 PREFIX_FRAGMENT = "sf_nr-"
 PREFIX_DEVIATION = "sf_deviation-"
