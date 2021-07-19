@@ -30,7 +30,7 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>Pick the source model to the algorithm. Surface Fragments will be calculated on this model, as well as distance scalars will be applied to this model</string>
+         <string>Surface fragments will be calculated as well as distance scalars will be applied to this model.</string>
         </property>
         <property name="nodeTypes" stdset="0">
          <stringlist>
@@ -67,7 +67,7 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>Pick the target model to the algorithm.</string>
+         <string>The ground truth model, here the Source Model will be compared to.</string>
         </property>
         <property name="nodeTypes" stdset="0">
          <stringlist>
@@ -110,7 +110,7 @@
       <item row="0" column="1">
        <widget class="ctkSliderWidget" name="initializationClusterRadiusSelector" native="true">
         <property name="toolTip">
-         <string>At the start of each iteration, an optimal initialization region and initialization transformation have to be determined. To this end, a circular zone is extracted around a randomly selected central vertex on the source model with an area that can be chosen here, and is registered to the target model.</string>
+         <string>The algorithm uses an initialization region, which is randomly chosen. Its size is determined by this radius. The size should be smaller than the expected fragment size. Too large regions will lead to less fragments, too small regions may lead to multiple inadequate fragments.</string>
         </property>
         <property name="decimals" stdset="0">
          <double>1.000000000000000</double>
@@ -142,7 +142,7 @@
       <item row="1" column="1">
        <widget class="ctkSliderWidget" name="minimalClusterAreaSelector" native="true">
         <property name="toolTip">
-         <string>First, the unmasked parts of the Source Model are separated based on their geometric connectivity. If a separate surface area is larger than this value, the algorithm starts. Furthermore, this is the termination criterion of the algorithm as it will be tested after each of the following iterations.</string>
+         <string>No fragment will be smaller than this area. The algorithm will continue till no continuous surface part of the model larger than this value is assigned to a fragment. To small values may result in an infinite loop (terminated by &quot;Maximal Iterations&quot; value).</string>
         </property>
         <property name="decimals" stdset="0">
          <double>1.000000000000000</double>
@@ -174,7 +174,7 @@
       <item row="2" column="1">
        <widget class="ctkSliderWidget" name="cutoffThresholdSelector" native="true">
         <property name="toolTip">
-         <string>All fragments, that are generated, will show a maximum continuous deviation of this value. A smaller value typically results in more fragments.</string>
+         <string>All fragments, that are generated, will show a maximum continuous deviation of this value. A smaller value typically results in more fragments. Too small values may result in multiple inadequate fragments.</string>
         </property>
         <property name="decimals" stdset="0">
          <double>2.000000000000000</double>
@@ -218,7 +218,7 @@
       <item row="0" column="1">
        <widget class="QCheckBox" name="preRegistrationCB">
         <property name="toolTip">
-         <string>Use Landmark registration for prealignment. Fiducials as landmarks have to be placed in the same order for the source and target model accordingly.</string>
+         <string>It is recommended to perform a pre-registration, optionally using the modules own landmark registration method. Please select the Source and Target Fiducials Node. Both need to contain &gt;3 fiducials each in corresponding order.</string>
         </property>
        </widget>
       </item>
@@ -247,7 +247,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Pick the source landmars to the algorithm.</string>
+            <string>Source ficucials node containing landmarks for the pre-registration. Fiducials have to be in the same order as in the target fiducials node.</string>
            </property>
            <property name="nodeTypes" stdset="0">
             <stringlist>
@@ -287,7 +287,7 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Pick the target landmars to the algorithm.</string>
+            <string>Target ficucials node containing landmarks for the pre-registration. Fiducials have to be in the same order as in the source fiducials node.</string>
            </property>
            <property name="nodeTypes" stdset="0">
             <stringlist>
@@ -327,7 +327,7 @@
       <item row="2" column="1">
        <widget class="ctkSliderWidget" name="initializationIterationsSelector" native="true">
         <property name="toolTip">
-         <string>At the start of each iteration, an optimal initialization region and initialization transformation have to be determined. This is done iteratively (the numbers of iterations can be set here) with a random region. The registration showing the smallest overall deviation among all iterations will be chosen as an initialization registration. Too small values may result in bad initial registration, large values may lead to a longer computation time.</string>
+         <string>An initialization region is randomly chosen and selected by its smallest overall deviation. The number of the random zones per iteration can be selected. Too small values may result in bad initial registration, large values may lead to a longer computation time.</string>
         </property>
         <property name="decimals" stdset="0">
          <double>0.000000000000000</double>
@@ -356,7 +356,7 @@
       <item row="3" column="1">
        <widget class="ctkSliderWidget" name="openingWidthSelector" native="true">
         <property name="toolTip">
-         <string>To remove thin bridging vertex lines that remain after thresholding due to the three dimensional overlapping, an opening method similar to the morphological operator in image processing is used. The original operator works by first eroding and then dilating a mask image. This selector variates the number of vertex rowes eroded and dilated in this process. Using small values may result in bridging vertices between fragments, too large values may smooth the borders of the fragments.</string>
+         <string>To remove thin bridging vertex lines that remain after thresholding due to the three dimensional overlapping, an opening method similar to the morphological operator in image processing is used. The original operator works by first eroding and then dilating a mask image. This value variates the number of vertex rows eroded and dilated in this process. Using small values may result in bridging vertices between fragments, too large values may smooth the outlines of the fragments.</string>
         </property>
         <property name="decimals" stdset="0">
          <double>0.000000000000000</double>
@@ -385,7 +385,7 @@
       <item row="4" column="1">
        <widget class="ctkSliderWidget" name="maximalIterationsSelector" native="true">
         <property name="toolTip">
-         <string>For some models it might happen that the algorithm gets caught in a loop, depending on the used settings. This is a technical selector terminating the iterative loop. It is not possible for the algorithm to find more fragments as number of iterations selected here.</string>
+         <string>For some models it might happen that the algorithm gets caught in a infinite loop, depending on the used settings. This is a technical selector terminating the iterative loop. It is not possible for the algorithm to find more fragments as number of iterations selected here.</string>
         </property>
         <property name="decimals" stdset="0">
          <double>0.000000000000000</double>
@@ -454,7 +454,7 @@
       <item row="9" column="1">
        <widget class="QCheckBox" name="markFragmentsCB">
         <property name="toolTip">
-         <string>Generate a scalar showing highlighting each fragment.</string>
+         <string>Generate a scalar showing highlighting each vertex of a respective fragment.</string>
         </property>
         <property name="text">
          <string/>
@@ -463,11 +463,11 @@
       </item>
       <item row="10" column="0" colspan="2">
        <widget class="QPushButton" name="defaultsButton">
-        <property name="text">
-         <string>Default Parameters</string>
-        </property>
         <property name="toolTip">
          <string>Reset default parameters.</string>
+        </property>
+        <property name="text">
+         <string>Default Parameters</string>
         </property>
        </widget>
       </item>
@@ -514,7 +514,11 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QSpinBox" name="fragmentSelectorSB"/>
+       <widget class="QSpinBox" name="fragmentSelectorSB">
+        <property name="toolTip">
+         <string>After running this method, the generated transformations and surface deviation scalars can be applied here in a fast forward manner. It may cause errors if nodes are renamed or deleted manually.</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
