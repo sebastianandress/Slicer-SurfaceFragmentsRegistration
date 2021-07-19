@@ -53,19 +53,13 @@ Parameters mentioned in the diagram can also be set in the module.
     - `Select Fragment`: After running this method, the generated transformations and surface deviation scalars can be applied here in a fast forward manner. It may cause errors if nodes are renamed or deleted manually.
 
 
-## Examples
+## Example
 
-### Boxes - Minimal Working Example
-Two boxes are compared with each other. Both are identical, but one is broken in the middle into two pieces. The algorithm recognizes this fact and registers both halves of the source box with the target box, thus creating a "Similarity Subgroup" for each half. For each subgroup considered as such, the deviation is zero.
+Two segmentations of a pelvis (e.g. one before and one after 3D printing) are compared. One shows a fracture with a displaced fragment (screenshot above, red, Source Model), the other is a correct match to the CT (screenshot above, green, Target Model).
 
-![ExampleOutput](/Resources/exampleBoxes.png)
+The algorithm automatically detects the fragment, registers it to the target and calculates the surface deviation of the source to the target per registration. Deviation shown by heatmap cold to hot.
 
-### Hemipelvis - Realistic Example
-Two segmentations of a pelvis (e.g. one before and one after 3D printing) are compared. One shows a fracture with a displaced fragment (Fig A, red, source), the other is a correct match to the CT (Fig B, green, target).
-
-The algorithm automatically detects the fragment (Fig. B & D, yellow), registers it to the target and calculates the surface deviation of the source to the target per registration (Fig. C & E).
-
-![ExampleOutput](/Resources/exampleHemipelvis.png)
+![ExampleOutput](/Resources/exampleOutput.gif)
 
 
 ## How to install
