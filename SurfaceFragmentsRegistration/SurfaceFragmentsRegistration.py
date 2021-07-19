@@ -530,11 +530,8 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
       regArrayId = self._addArray(sourcePD, sra, LET_INTERMEDIATEREGISTERED)
       
       if parameterNode.GetParameter(PARAMETER_ADDTRANSFORMATION) == "true":
-        trfNode = slicer.vtkMRMLLinearTransformNode()
         t = self._multiplyTransforms([lmTrf, smallestTrf, trf])
-        trfNode.SetMatrixTransformToParent(t.GetMatrix())
-        trfNode.SetName(PREFIX_TRANSFORMATION + str(clusters))
-        slicer.mrmlScene.AddNode(trfNode)
+        self._addTrf(t, name=PREFIX_TRANSFORMATION + str(clusters))
 
       if parameterNode.GetParameter(PARAMETER_MARKFRAGMENTS) == "true":
         ca = np.zeros(sourcePD.GetNumberOfPoints())
@@ -792,7 +789,7 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
     return landmarkTransform
 
   @staticmethod
-  def _regICP(sourcePD, targetPD, pointsNr=0):
+  def _regICP(sourcePD, targetPD):
 
     icpTransform = vtk.vtkIterativeClosestPointTransform()
     icpTransform.SetSource(sourcePD)
@@ -850,7 +847,7 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
   @staticmethod
   def _addTrf(trf, name=None):
     no = slicer.vtkMRMLLinearTransformNode()
-    no.SetAndObserveTransformFromParent(trf)
+    no.SetAndObserveTransformToParent(trf)
     t = slicer.mrmlScene.AddNode(no)
     if name:
       t.SetName(name)
@@ -907,17 +904,13 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     """Run as few or as many tests as needed here.
     """
     self.setUp()
-    self.test_SurfaceFragmentsRegistration1()
+    #self.test_SurfaceFragmentsRegistration1()
     self.test_SurfaceFragmentsRegistration2()
 
   def test_SurfaceFragmentsRegistration1(self):
     """Minimal working scenario with spheres.
     """
 
-    self.delayDisplay("Starting the test")
-    #
-    # first, get some data
-    #
     self.delayDisplay("Starting test_SimilaritySubgroups1")
 
     # from SegmentStatistics import SegmentStatisticsLogic
@@ -1006,7 +999,7 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     """Real world scenario with segmented hemipelvis.
     """
 
-    self.delayDisplay("Starting the test")
+    self.delayDisplay("Starting test_SimilaritySubgroups2")
 
     # Get/create input data
 
@@ -1016,12 +1009,16 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     SampleData.downloadSamples('CTAAbdomenPanoramix')
     nodes = SampleData.downloadSamples('Surface Fragments Registration Models')
     sourceModel, targetModel = nodes
+    sourceModel.GetDisplayNode().SetSliceIntersectionVisibility(1)
+    targetModel.GetDisplayNode().SetSliceIntersectionVisibility(1)
+    sourceModel.GetDisplayNode().SetSliceIntersectionThickness(2)
 
     self.delayDisplay("Run algorithm")
     parameterNode = self.logic.getParameterNode()
     self.logic.setDefaultParameters(parameterNode, overwrite=True)
     parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, sourceModel.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, targetModel.GetID())
+    parameterNode.SetParameter(PARAMETER_OPENINGWIDTH, str(10))
     parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(1.0))
 
     self.logic.process(parameterNode)
