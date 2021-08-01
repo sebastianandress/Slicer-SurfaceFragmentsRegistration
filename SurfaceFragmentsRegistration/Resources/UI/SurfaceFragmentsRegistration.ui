@@ -101,48 +101,16 @@
      </property>
      <layout class="QFormLayout" name="formLayout_4">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Initialization Candidate Radius: </string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="ctkSliderWidget" name="initializationClusterRadiusSelector" native="true">
-        <property name="toolTip">
-         <string>The algorithm uses an initialization region, which is randomly chosen. Its size is determined by this radius. The size should be smaller than the expected fragment size. Too large regions will lead to less fragments, too small regions may lead to multiple inadequate fragments.</string>
-        </property>
-        <property name="decimals" stdset="0">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="singleStep" stdset="0">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="minimum" stdset="0">
-         <double>0.000000000000000</double>
-        </property>
-        <property name="maximum" stdset="0">
-         <double>1000.000000000000000</double>
-        </property>
-        <property name="value" stdset="0">
-         <double>50.000000000000000</double>
-        </property>
-        <property name="suffix" stdset="0">
-         <string>mm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Minimal Fragment Area: </string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="ctkSliderWidget" name="minimalClusterAreaSelector" native="true">
         <property name="toolTip">
-         <string>No fragment will be smaller than this area. The algorithm will continue till no continuous surface part of the model larger than this value is assigned to a fragment. To small values may result in an infinite loop (terminated by &quot;Maximal Iterations&quot; value).</string>
+         <string>No fragment will be smaller than this area. The algorithm will continue till no continuous surface part of the model larger than this value is assigned to a fragment. Also, random initialization candidates of this defined area will be used. Too large regions will lead to less fragments, too small values may result in multiple inadequate fragments or an infinite loop (terminated by &quot;Maximal Iterations&quot; value).</string>
         </property>
         <property name="decimals" stdset="0">
          <double>1.000000000000000</double>
@@ -164,14 +132,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="label_13">
         <property name="text">
          <string>Cutoff Deviation: </string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <widget class="ctkSliderWidget" name="cutoffThresholdSelector" native="true">
         <property name="toolTip">
          <string>All fragments, that are generated, will show a maximum continuous deviation of this value. A smaller value typically results in more fragments. Too small values may result in multiple inadequate fragments.</string>
@@ -571,7 +539,6 @@
  <tabstops>
   <tabstop>sourceModelSelector</tabstop>
   <tabstop>targetModelSelector</tabstop>
-  <tabstop>initializationClusterRadiusSelector</tabstop>
   <tabstop>minimalClusterAreaSelector</tabstop>
   <tabstop>cutoffThresholdSelector</tabstop>
   <tabstop>preRegistrationCB</tabstop>

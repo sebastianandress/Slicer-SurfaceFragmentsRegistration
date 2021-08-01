@@ -106,7 +106,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
     # (in the selected parameter node).
     self.ui.sourceModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
     self.ui.targetModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-    self.ui.initializationClusterRadiusSelector.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.minimalClusterAreaSelector.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.cutoffThresholdSelector.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.preRegistrationCB.connect("toggled(bool)", self.updateParameterNodeFromGUI)
@@ -222,7 +221,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
 
     self.ui.sourceModelSelector.setCurrentNode(self._parameterNode.GetNodeReference(PARAMETER_SOURCEMODEL))
     self.ui.targetModelSelector.setCurrentNode(self._parameterNode.GetNodeReference(PARAMETER_TARGETMODEL))
-    self.ui.initializationClusterRadiusSelector.value = float(self._parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS))
     self.ui.minimalClusterAreaSelector.value = float(self._parameterNode.GetParameter(PARAMETER_MINIMALCLUSTERAREA))
     self.ui.cutoffThresholdSelector.value = float(self._parameterNode.GetParameter(PARAMETER_CUTOFFTHRESHOLD))
     self.ui.preRegistrationCB.checked = (self._parameterNode.GetParameter(PARAMETER_PREREGISTRATION) == "true")
@@ -269,7 +267,6 @@ class SurfaceFragmentsRegistrationWidget(ScriptedLoadableModuleWidget, VTKObserv
 
     self._parameterNode.SetNodeReferenceID(PARAMETER_SOURCEMODEL, self.ui.sourceModelSelector.currentNodeID)
     self._parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, self.ui.targetModelSelector.currentNodeID)
-    self._parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(self.ui.initializationClusterRadiusSelector.value))
     self._parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(self.ui.minimalClusterAreaSelector.value))
     self._parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(self.ui.cutoffThresholdSelector.value))
     self._parameterNode.SetParameter(PARAMETER_PREREGISTRATION, "true" if self.ui.preRegistrationCB.checked else "false")
@@ -377,8 +374,6 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
     """
     Initialize parameter node with default settings.
     """
-    if overwrite or not parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS):
-      parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(DEFAULT_INITIALIZATIONCLUSTERRADIUS))
     if overwrite or not parameterNode.GetParameter(PARAMETER_MINIMALCLUSTERAREA):
       parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(DEFAULT_MINIMALCLUSTERAREA))
     if overwrite or not parameterNode.GetParameter(PARAMETER_CUTOFFTHRESHOLD):
@@ -470,7 +465,8 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
         for _ in range(int(float(parameterNode.GetParameter(PARAMETER_INITIALIZATIONITERATIONS)))):
           # extract random piece
           vertexId = np.random.randint(0,remPDList[i].GetNumberOfPoints())
-          extractPD = self._extractDistancePD(remPDList[i], vertexId, float(parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS)))
+          extractPD = self._dilateExtractPD(remPDList[i], vertexId, float(parameterNode.GetParameter(PARAMETER_MINIMALCLUSTERAREA)))
+          #extractPD = self._extractDistancePD(remPDList[i], vertexId, float(parameterNode.GetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS)))
 
           # register piece
           trf = self._regICP(extractPD, parameterNode.GetNodeReference(PARAMETER_TARGETMODEL).GetPolyData())
@@ -667,36 +663,56 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
     pd.GetPointData().RemoveArray(baseArId)
     return pd
   
+  @staticmethod
+  def _dilateExtractPD(polydata, seedId, maximalArea):
 
-  def _extractDistancePD(self, polydata, seedId, distance):
-    sphere = vtk.vtkSphereSource()
-    sphere.SetRadius(1)
-    sphere.SetCenter(polydata.GetPoint(seedId))
-    sphere.Update()
-    
-    if polydata.GetPointData().GetArray(LET_INTERMEDIATEIDS):
-      seedId = polydata.GetPointData().GetArray(LET_INTERMEDIATEIDS).GetValue(seedId)
-    else:
-      self._addArray(polydata, range(polydata.GetNumberOfPoints()), LET_INTERMEDIATEIDS)
+    verticesToCheck = {seedId}
+    addedVertices = set()
+    count = 0
 
-    dist = vtk.vtkDistancePolyDataFilter()
-    dist.AddInputData(0, polydata)
-    dist.AddInputData(1, sphere.GetOutput())
-    dist.SignedDistanceOff()
-    dist.NegateDistanceOff()
-    dist.ComputeSecondDistanceOff()
-    dist.Update()
-    extractPd = self._thresholdPD(dist.GetOutput(), "Distance", upper=distance)
-    
-    extrSeedId = vtk.util.numpy_support.vtk_to_numpy(extractPd.GetPointData().GetArray(LET_INTERMEDIATEIDS)).tolist().index(seedId)
-    
-    connectivityFilter = vtk.vtkPolyDataConnectivityFilter()
-    connectivityFilter.SetInputData(extractPd)
-    connectivityFilter.SetExtractionModeToPointSeededRegions()
-    connectivityFilter.AddSeed(extrSeedId)
-    connectivityFilter.Update()
-    
-    return connectivityFilter.GetOutput()
+    while True:
+      curVTC = verticesToCheck.copy()
+      for v in curVTC:
+        cellsIdList = vtk.vtkIdList()
+        polydata.GetPointCells(v, cellsIdList)
+        addedVertices.add(v)
+        for c in range(cellsIdList.GetNumberOfIds()):
+          pointsIdList = vtk.vtkIdList()
+          polydata.GetCellPoints(cellsIdList.GetId(c), pointsIdList)
+          verticesToCheck.update([pointsIdList.GetId(p) for p in range(pointsIdList.GetNumberOfIds())])
+        verticesToCheck = verticesToCheck - addedVertices
+      
+      if len(verticesToCheck) == 0:
+        l = locals()
+        if l['cleanFilter']:
+          return cleanFilter.GetOutput()
+        else:
+          return vtk.vtkPolyData()
+      
+      selectionNode = vtk.vtkSelectionNode()
+      selectionNode.SetFieldType(vtk.vtkSelectionNode.POINT)
+      selectionNode.SetContentType(4)
+      selectionNode.SetSelectionList(vtk.util.numpy_support.numpy_to_vtk(list(addedVertices)))
+      selectionNode.GetProperties().Set(vtk.vtkSelectionNode.CONTAINING_CELLS(), 1)
+
+      selection = vtk.vtkSelection()
+      selection.AddNode(selectionNode)
+      
+      extractSelection = vtk.vtkExtractSelection()
+      extractSelection.SetInputData(0, polydata)
+      extractSelection.SetInputData(1, selection)
+      extractSelection.Update()
+      
+      geometryFilter = vtk.vtkGeometryFilter() 
+      geometryFilter.SetInputData(extractSelection.GetOutput()) 
+      geometryFilter.Update()
+      
+      cleanFilter = vtk.vtkCleanPolyData()
+      cleanFilter.SetInputData(geometryFilter.GetOutput())
+      cleanFilter.Update()
+      
+      if SurfaceFragmentsRegistrationLogic._getSurfaceArea(cleanFilter.GetOutput()) >= maximalArea:
+        return cleanFilter.GetOutput()
 
   @staticmethod
   def _thresholdPD(polydata, array, lower=0, upper=0):
@@ -968,7 +984,6 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, tmod.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_SOURCELANDMARKS, sfid.GetID())
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETLANDMARKS, tfid.GetID())
-    parameterNode.SetParameter(PARAMETER_INITIALIZATIONCLUSTERRADIUS, str(20))
     parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(10))
     parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(0.5))
     parameterNode.SetParameter(PARAMETER_PREREGISTRATION, "true")
@@ -1021,6 +1036,7 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     parameterNode.SetNodeReferenceID(PARAMETER_TARGETMODEL, targetModel.GetID())
     parameterNode.SetParameter(PARAMETER_OPENINGWIDTH, str(10))
     parameterNode.SetParameter(PARAMETER_CUTOFFTHRESHOLD, str(1.0))
+    parameterNode.SetParameter(PARAMETER_MINIMALCLUSTERAREA, str(5000))
 
     self.logic.process(parameterNode)
 
@@ -1040,9 +1056,8 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     self.delayDisplay('Test passed')
 
 
-DEFAULT_INITIALIZATIONCLUSTERRADIUS = 50
 DEFAULT_INITIALIZATIONITERATIONS = 3
-DEFAULT_MINIMALCLUSTERAREA = 500
+DEFAULT_MINIMALCLUSTERAREA = 5000
 DEFAULT_OPENINGWIDTH = 8
 DEFAULT_CUTOFFTHRESHOLD = 1.5
 DEFAULT_MAXIMALITERATIONS = 10
@@ -1055,7 +1070,6 @@ PARAMETER_SOURCEMODEL = "SourceModel"
 PARAMETER_TARGETMODEL = "TargetModel"
 PARAMETER_SOURCELANDMARKS = "SourceLandmarks"
 PARAMETER_TARGETLANDMARKS = "TargetLandmarks"
-PARAMETER_INITIALIZATIONCLUSTERRADIUS = "InitializationClusterRadius"
 PARAMETER_INITIALIZATIONITERATIONS = "InitializationIterations"
 PARAMETER_MINIMALCLUSTERAREA = "MinimalClusterArea"
 PARAMETER_OPENINGWIDTH = "OpeningWidth"
