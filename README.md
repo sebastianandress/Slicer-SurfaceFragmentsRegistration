@@ -38,7 +38,6 @@ Parameters mentioned in the diagram can also be set in the module.
     - `Source Model` (*S*): Surface fragments will be calculated as well as distance scalars will be applied to this model.
     - `Target Model` (*T*): The ground truth model, here the Source Model will be compared to.
 - Settings
-    - `Initialization Candidate Radius` (*ζ*): The algorithm uses an initialization region, which is randomly chosen. Its size is determined by this radius. The size should be smaller than the expected fragment size. Too large regions will lead to less fragments, too small regions may lead to multiple inadequate fragments.
     - `Minimal Fragment Area` (*ε*, *ζ*): No fragment will be smaller than this area. The algorithm will continue till no continuous surface part of the model larger than this value is assigned to a fragment. Also, random initialization candidates of this defined area will be used. Too large regions will lead to less fragments, too small values may result in multiple inadequate fragments or an infinite loop  (terminated by `Maximal Iterations` value).
     - `Cutoff Deviation` (*δ*): All fragments, that are generated, will show a maximum continuous deviation of this value. A smaller value typically results in more fragments. Too small values may result in multiple inadequate fragments.
 - Advanced
