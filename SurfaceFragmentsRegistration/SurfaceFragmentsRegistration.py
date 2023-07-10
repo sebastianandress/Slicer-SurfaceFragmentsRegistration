@@ -719,7 +719,8 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
     thresh = vtk.vtkThreshold()
     thresh.SetInputArrayToProcess(0, 0, vtk.vtkDataObject().FIELD_ASSOCIATION_POINTS, vtk.vtkDataSetAttributes().SCALARS, array)
     thresh.SetInputData(polydata)
-    thresh.ThresholdBetween(lower, upper)
+    thresh.SetLowerThreshold(lower)
+    thresh.SetUpperThreshold(upper)
 
     geom = vtk.vtkGeometryFilter()
     geom.SetInputConnection(thresh.GetOutputPort())
@@ -759,7 +760,8 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
 
       for r in range(connectivityFilter.GetNumberOfExtractedRegions()):
 
-        selectorCon.ThresholdBetween(r,r)
+        selectorCon.SetLowerThreshold(r)
+        selectorCon.SetUpperThreshold(r)
         geometryCon = vtk.vtkGeometryFilter()
         geometryCon.SetInputConnection(selectorCon.GetOutputPort())
         geometryCon.Update()
@@ -787,9 +789,9 @@ class SurfaceFragmentsRegistrationLogic(ScriptedLoadableModuleLogic):
 
     def fiducialsToPoints(fiducials):
       points = vtk.vtkPoints()
-      for fid in range(fiducials.GetNumberOfFiducials()):
+      for fid in range(fiducials.GetNumberOfControlPoints()):
         pos = [0]*3
-        fiducials.GetNthFiducialPosition(fid, pos)
+        fiducials.GetNthControlPointPosition(fid, pos)
         points.InsertNextPoint(list(pos))
       return points
     
@@ -1025,8 +1027,8 @@ class SurfaceFragmentsRegistrationTest(ScriptedLoadableModuleTest):
     SampleData.downloadSamples('CTAAbdomenPanoramix')
     nodes = SampleData.downloadSamples('Surface Fragments Registration Models')
     sourceModel, targetModel = nodes
-    sourceModel.GetDisplayNode().SetSliceIntersectionVisibility(1)
-    targetModel.GetDisplayNode().SetSliceIntersectionVisibility(1)
+    sourceModel.GetDisplayNode().SetVisibility2D(1)
+    targetModel.GetDisplayNode().SetVisibility2D(1)
     sourceModel.GetDisplayNode().SetSliceIntersectionThickness(2)
 
     self.delayDisplay("Run algorithm")
